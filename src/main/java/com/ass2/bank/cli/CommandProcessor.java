@@ -37,7 +37,7 @@ public class CommandProcessor {
 
     private String handleDeposit(String[] parts){
         if(parts.length != 3){
-            return "Invalid deposit arguments";
+            return "Invalid deposit arguments.";
         }
 
         String currency = parts[1];
