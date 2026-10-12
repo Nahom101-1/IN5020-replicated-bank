@@ -1,15 +1,18 @@
 package com.ass2.bank.cli;
 
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
+import com.ass2.bank.util.Log;
+
 
 
 public class BatchInput {
     
     private static final long MIN_DELAY_MS = 500; 
-    private static final long MAX_DELAY_MS = 1500; 
+    private static final long MAX_DELAY_MS = 1501; 
     
     private void randomDelay() throws InterruptedException{
         long delay = ThreadLocalRandom.current().nextLong(MIN_DELAY_MS, MAX_DELAY_MS);
@@ -23,7 +26,7 @@ public class BatchInput {
             while(scanner.hasNextLine()){
                 String line = scanner.nextLine();
                 String result = processor.process(line);
-                System.out.println(result);
+                Log.info(result);
                 
                 if(line.trim().equals("exit") || !scanner.hasNextLine()){
                     break;

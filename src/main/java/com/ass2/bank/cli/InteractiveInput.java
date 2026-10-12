@@ -1,5 +1,6 @@
 package com.ass2.bank.cli;
 import java.util.Scanner;
+import com.ass2.bank.util.Log;
 
 public class InteractiveInput {
 
@@ -15,7 +16,7 @@ public class InteractiveInput {
 
             String line = scanner.nextLine();
             String result = processor.process(line);
-            System.out.println(result);
+            Log.info(result);
 
             if(line.trim().equals("exit")){
                 break;
