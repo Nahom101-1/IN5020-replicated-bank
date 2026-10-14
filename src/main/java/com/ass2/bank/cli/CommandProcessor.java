@@ -83,19 +83,21 @@ public class CommandProcessor {
     }
 
     private String handleCheckTxStatus(String[] parts){
-        if(parts.length != 3){
+        if(parts.length != 2 && parts.length != 3){
             return "Invalid transaction ID.";
         }
 
-        String serverName = parts[1];
+        String serverName = (parts.length == 3) ? parts[1] : null;
+        int counterIndex = (parts.length == 3) ? 2 : 1;
         int counter;
+        
         try {
-            counter = Integer.parseInt(parts[2]);
+            counter = Integer.parseInt(parts[counterIndex]);
         } catch (NumberFormatException e) {
             return "Invalid transaction ID.";
         }
 
-        String uniqueId = serverName + " " + counter;
+        String uniqueId = (serverName != null) ? serverName + " " + counter : String.valueOf(counter);
         return (counter >=0) ? "Checking transaction: " + uniqueId : "Invalid transaction ID.";
     }
 
@@ -127,15 +129,29 @@ public class CommandProcessor {
         if(parts.length != 2){
            return "Invalid sleep arguments.";
         }
-        int sleep;
 
         try {
-            sleep = Integer.parseInt(parts[1]);
-        } catch (NumberFormatException e) {
+           double seconds = parseNumber(parts[1]);
+
+           if(seconds < 0 || seconds > Long.MAX_VALUE / 1000.0){
+            return "Invalid sleep duration.";
+           }
+
+           long milliseconds = (long) (seconds * 1000);
+           Thread.sleep(milliseconds);
+
+           return "Slept for " + seconds + " seconds.";
+        } 
+        
+        catch (NumberFormatException e) {
             return "Invalid sleep duration.";
         }
 
-        return (sleep >= 0) ? "Sleep requested: " + sleep + " seconds." : "Sleep duration cannot be negative.";
+        catch (InterruptedException e){
+            Thread.currentThread().interrupt();
+            return "Sleep interrupted";
+        }
+
     }
 
     private String handleExit(String[] parts){

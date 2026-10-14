@@ -1,0 +1,8 @@
+getQuickBalance NOK
+getQuickBalance USD
+getQuickBalance
+getQuickBalance NOK 100
+getSyncedBalance NOK
+getSyncedBalance USD
+getSyncedBalance
+getSyncedBalance NOK 100

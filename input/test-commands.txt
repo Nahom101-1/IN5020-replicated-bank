@@ -1,5 +1,0 @@
-deposit NOK 100
-getQuickBalance NOK
-memberInfo
-exit
-deposit NOK 500

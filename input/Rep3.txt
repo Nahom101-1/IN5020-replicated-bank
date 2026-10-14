@@ -1,0 +1,25 @@
+memberInfo
+getSyncedBalance EUR
+getQuickBalance EUR
+deposit NOK 50
+getQuickBalance
+sleep 10
+getSyncedBalance
+addInterest 7
+getSyncedBalance
+deposit EUR -150
+deposit USD -100
+deposit DKK 10
+deposit CHF 30
+deposit NOK -100
+deposit GBP 50
+addInterest 20
+sleep 9
+memberInfo
+getSyncedBalance USD
+getQuickBalance USD
+sleep 30
+getSyncedBalance USD
+getQuickBalance USD
+getHistory
+exit

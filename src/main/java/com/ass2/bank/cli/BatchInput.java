@@ -28,7 +28,7 @@ public class BatchInput {
                 String result = processor.process(line);
                 Log.info(result);
                 
-                if(line.trim().equals("exit") || !scanner.hasNextLine()){
+                if(line.trim().equals("exit")){
                     break;
                 }
 
@@ -46,7 +46,7 @@ public class BatchInput {
     public static void main(String[] args){
         BatchInput input = new BatchInput();
         try {
-            input.run("IN5020-replicated-bank/input/test-commands.txt");
+            input.run("IN5020-replicated-bank/input/Rep3.txt");
         } catch (FileNotFoundException e) {
             System.out.println("File not found.");
         }
