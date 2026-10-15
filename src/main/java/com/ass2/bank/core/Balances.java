@@ -47,6 +47,12 @@ final class Balances {
         return new TreeMap<>(amounts);
     }
 
+    /** Replaces all amounts with the given ones. */
+    void replaceWith(Map<String, Double> newAmounts) {
+        amounts.clear();
+        amounts.putAll(newAmounts);
+    }
+
     private static double growthFactor(double percent) {
         return 1 + percent / 100.0;
     }
