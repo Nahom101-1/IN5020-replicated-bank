@@ -39,6 +39,22 @@ public class OutstandingSender {
     }
 
     /**
+     * Stops the timer and sends what is still outstanding one last time. Used when the bank
+     * server exits, so its last deposits reach every replica and its last getSyncedBalance is
+     * answered before it leaves the group. broadcast() returns once every replica has ACKed,
+     * so the transactions have been applied here too when this method returns.
+     */
+    public void flush() throws InterruptedException {
+        timer.shutdown();
+        timer.awaitTermination(INTERVAL_SECONDS, TimeUnit.SECONDS); // let a running broadcast finish
+        int count = account.outstanding().size();
+        if (count > 0) {
+            Log.info("Sending " + count + " outstanding transaction(s) before exit");
+            sendNow();
+        }
+    }
+
+    /**
      * Broadcasts the current outstanding transactions, if there are any.
      * They stay in outstanding_collection until they are delivered back to us.
      */

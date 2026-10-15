@@ -46,7 +46,9 @@ public class BatchInput {
                 }
                 Log.info("> " + line.trim());
                 String result = processor.process(line);
-                Log.info(result);
+                if(result != null){
+                    Log.info(result);
+                }
                 
                 if(line.trim().equals("exit")){
                     break;

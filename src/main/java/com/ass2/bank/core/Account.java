@@ -1,6 +1,7 @@
 package com.ass2.bank.core;
 
 import com.ass2.bank.sync.SyncHost;
+import com.ass2.bank.util.Log;
 import com.ass2.bank.sync.SyncMarker;
 import com.ass2.bank.sync.SyncedBalance;
 import com.ass2.common.ReplicaState;
@@ -77,8 +78,12 @@ public class Account implements SyncHost {
             try {
                 Operation.parse(transaction.command()).applyTo(balances);
             } catch (IllegalArgumentException e) {
-                System.out.println("Skipped invalid transaction " + transaction.uniqueId());
+                Log.info("Skipped invalid transaction " + transaction.uniqueId());
             }
+            // Same numbering as getHistory. Every replica logs the same numbers for the same
+            // transactions, which shows that they all apply one total order.
+            Log.info("Applied " + orderCounter + ". " + transaction.command()
+                    + " (" + transaction.uniqueId() + ")");
             appliedIds.add(transaction.uniqueId());
             orderCounter++;
             executed.add(new Executed(transaction, LocalDateTime.now()));

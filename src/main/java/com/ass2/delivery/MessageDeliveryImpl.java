@@ -1,5 +1,6 @@
 package com.ass2.delivery;
 
+import com.ass2.bank.util.Log;
 import com.ass2.common.BankReplica;
 import com.ass2.common.MessageDelivery;
 import com.ass2.common.ReplicaState;
@@ -18,6 +19,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class MessageDeliveryImpl implements MessageDelivery, AutoCloseable {
 	private static final long STATE_TRANSFER_TIMEOUT_SECONDS = 5;
@@ -26,6 +28,8 @@ public class MessageDeliveryImpl implements MessageDelivery, AutoCloseable {
 	private final ExecutorService remoteCalls = Executors.newCachedThreadPool(daemonThreads("delivery-rpc"));
 	private final ConcurrentMap<String, GroupQueue> groupQueues = new ConcurrentHashMap<>();
 	private final Broadcaster broadcaster = new Broadcaster(remoteCalls);
+	/** Numbers the broadcast messages in the log, in the order they are delivered. */
+	private final AtomicLong messageCounter = new AtomicLong();
 
 	@Override
 	public void join(String group, String name, BankReplica replica) throws RemoteException {
@@ -44,9 +48,11 @@ public class MessageDeliveryImpl implements MessageDelivery, AutoCloseable {
 					replica.installState(state);
 					return null;
 				}, "install state on " + name);
+				Log.info("STATE installed on " + name + " (order_counter=" + state.orderCounter() + ")");
 			}
 
 			members.add(group, name, replica);
+			Log.info("JOIN " + name + " to " + group + ", members=" + members.names(group));
 			notifyMembership(group);
 			return null;
 		});
@@ -61,6 +67,7 @@ public class MessageDeliveryImpl implements MessageDelivery, AutoCloseable {
 		inGroupOrder(member.group(), () -> {
 			MemberRegistry.Member removed = members.remove(name);
 			if (removed != null) {
+				Log.info("LEAVE " + name + ", members=" + members.names(member.group()));
 				notifyMembership(member.group());
 			}
 			return null;
@@ -83,10 +90,17 @@ public class MessageDeliveryImpl implements MessageDelivery, AutoCloseable {
 				throw new RemoteException("Replica has left the group: " + sender);
 			}
 			List<MemberRegistry.Member> targets = members.members(senderMember.group());
-			Set<MemberRegistry.Member> failedMembers = broadcaster.deliver(targets, message);
+			String label = "#" + messageCounter.incrementAndGet();
+			Log.info("BROADCAST " + label + " from " + sender + ": " + message.size()
+					+ " transaction(s) to " + members.names(senderMember.group()));
+			Set<MemberRegistry.Member> failedMembers = broadcaster.deliver(targets, message, label);
 			boolean membershipChanged = false;
 			for (MemberRegistry.Member failed : failedMembers) {
-				membershipChanged |= members.remove(failed);
+				if (members.remove(failed)) {
+					membershipChanged = true;
+					Log.info("FAIL " + failed.name() + " (no ACK for " + label + " after 5 s), members="
+							+ members.names(senderMember.group()));
+				}
 			}
 			if (membershipChanged) {
 				notifyMembership(senderMember.group());
@@ -107,11 +121,13 @@ public class MessageDeliveryImpl implements MessageDelivery, AutoCloseable {
 				ReplicaState state = callWithTimeout(member.replica()::getState,
 						"get state from " + member.name());
 				if (state != null) {
+					Log.info("STATE taken from " + member.name());
 					return state;
 				}
 				throw new RemoteException("Replica returned an empty state snapshot");
 			} catch (RemoteException e) {
 				if (members.remove(member)) {
+					Log.info("FAIL " + member.name() + " (could not send its state), members=" + members.names(group));
 					notifyMembership(group);
 				}
 			}
@@ -130,6 +146,8 @@ public class MessageDeliveryImpl implements MessageDelivery, AutoCloseable {
 					member.replica().onMembershipChange(names);
 				} catch (RemoteException | RuntimeException e) {
 					if (members.remove(member)) {
+						Log.info("FAIL " + member.name() + " (membership notification failed), members="
+								+ members.names(group));
 						GroupQueue queue = groupQueues.get(group);
 						if (queue != null) {
 							queue.execute(() -> notifyMembership(group));

@@ -20,4 +20,17 @@ public class Log {
     public static String format(LocalDateTime time){
         return time.format(FORMATTER);
     }
+
+    /*
+    * Logs a message that may span several lines, giving every line its own timestamp.
+    * An empty message logs nothing.
+    */
+    public static synchronized void lines(String message){
+        if (message.isEmpty()) {
+            return;
+        }
+        for (String line : message.split("\n")) {
+            info(line);
+        }
+    }
 }

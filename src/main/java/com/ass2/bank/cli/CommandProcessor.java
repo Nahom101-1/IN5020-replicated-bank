@@ -227,6 +227,7 @@ public class CommandProcessor {
 
     /**
     * Starts a synced balance request. The balance is printed later, when it is ready.
+    * Returns null because the line is already logged.
     */
     private String handleGetSyncedBalance(String[] parts){
         if(parts.length > 2){
@@ -237,8 +238,11 @@ public class CommandProcessor {
         if(!account.knowsCurrency(currency)){
             return "Unknown currency " + currency;
         }
+        // Logged before the request: the naive version answers at once when nothing is
+        // outstanding, and that answer must come after this line.
+        Log.info("getSyncedBalance " + currency + ": waiting for outstanding transactions");
         syncedBalance.request(currency);
-        return "getSyncedBalance " + currency + ": waiting for outstanding transactions";
+        return null;
     }
 
     /**

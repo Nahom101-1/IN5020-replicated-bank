@@ -21,6 +21,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -80,7 +81,10 @@ public class BankServerMain {
             return;
         }
 
-        String replicaName = accountName + "-" + ProcessHandle.current().pid();
+        // Unique name in the group, the first part of every transaction id. -Dname=<name> sets
+        // it (the run scripts use rep1-a, rep1-b, ...); ids are "<name> <counter>", so no spaces.
+        String replicaName = System.getProperty("name", accountName + "-" + ProcessHandle.current().pid())
+                .trim().replaceAll("\\s+", "-");
         Account account = new Account(replicaName, rates);
         SyncedBalance syncedBalance = SyncedBalance.create(
                 System.getProperty(SyncedBalance.MODE_PROPERTY, "ordered"), account, Log::info);
@@ -101,14 +105,23 @@ public class BankServerMain {
                 + " (getSyncedBalance: " + syncedBalance.mode() + ")");
 
         // The first replicas wait for each other. A late replica already sees enough members.
+        // The member list is read from the delivery server, not from the membership callbacks:
+        // those are sent from several threads and can arrive out of order, and an old, shorter
+        // list arriving last would make this wait forever.
+        List<String> members;
         try {
             Log.info("Waiting for " + numberOfReplicas + " replicas...");
-            replica.waitForMembers(numberOfReplicas);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            members = delivery.getMembers(accountName);
+            while (members.size() < numberOfReplicas) {
+                Thread.sleep(200);
+                members = delivery.getMembers(accountName);
+            }
+        } catch (RemoteException | InterruptedException e) {
+            Log.info("Stopped while waiting for the other replicas: " + e.getMessage());
             System.exit(1);
+            return;
         }
-        Log.info("Members: " + replica.members());
+        Log.info("Members: " + String.join(", ", members));
 
         OutstandingSender sender = new OutstandingSender(account, delivery, replicaName);
         sender.start();
@@ -116,7 +129,13 @@ public class BankServerMain {
         CommandProcessor processor = new CommandProcessor(account, syncedBalance, replica);
         runCommands(inputFile, processor);
 
-        sender.stop();
+        // Send what is still outstanding before leaving, so our last transactions reach every
+        // replica and our last getSyncedBalance is answered.
+        try {
+            sender.flush();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         syncedBalance.close();
         try {
             delivery.leave(replicaName);
