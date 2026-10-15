@@ -1,0 +1,50 @@
+[2026-10-15 16:37:41] Message Delivery server listening on registry port 1099
+[2026-10-15 16:37:41] JOIN rep1-b to group01, members=[rep1-b]
+[2026-10-15 16:37:41] STATE taken from rep1-b
+[2026-10-15 16:37:41] STATE installed on rep1-c (order_counter=0)
+[2026-10-15 16:37:41] JOIN rep1-c to group01, members=[rep1-b, rep1-c]
+[2026-10-15 16:37:41] STATE taken from rep1-b
+[2026-10-15 16:37:41] STATE installed on rep1-a (order_counter=0)
+[2026-10-15 16:37:41] JOIN rep1-a to group01, members=[rep1-b, rep1-c, rep1-a]
+[2026-10-15 16:37:48] STATE taken from rep1-b
+[2026-10-15 16:37:48] STATE installed on rep2-b (order_counter=0)
+[2026-10-15 16:37:48] JOIN rep2-b to group01, members=[rep1-b, rep1-c, rep1-a, rep2-b]
+[2026-10-15 16:37:48] STATE taken from rep1-b
+[2026-10-15 16:37:48] STATE installed on rep2-a (order_counter=0)
+[2026-10-15 16:37:48] JOIN rep2-a to group01, members=[rep1-b, rep1-c, rep1-a, rep2-b, rep2-a]
+[2026-10-15 16:37:52] BROADCAST #1 from rep1-a: 2 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a]
+[2026-10-15 16:37:52] BROADCAST #2 from rep1-b: 2 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a]
+[2026-10-15 16:37:52] BROADCAST #3 from rep1-c: 2 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a]
+[2026-10-15 16:37:53] STATE taken from rep1-b
+[2026-10-15 16:37:53] STATE installed on rep3-a (order_counter=6)
+[2026-10-15 16:37:53] JOIN rep3-a to group01, members=[rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:37:58] BROADCAST #4 from rep2-b: 2 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:37:58] BROADCAST #5 from rep2-a: 2 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:02] BROADCAST #6 from rep1-a: 1 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:02] BROADCAST #7 from rep1-b: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:02] BROADCAST #8 from rep1-c: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:03] BROADCAST #9 from rep3-a: 1 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:08] BROADCAST #10 from rep2-b: 5 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:08] BROADCAST #11 from rep2-a: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:12] BROADCAST #12 from rep1-a: 7 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:12] BROADCAST #13 from rep1-b: 5 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:12] BROADCAST #14 from rep1-c: 5 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:13] BROADCAST #15 from rep3-a: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:18] BROADCAST #16 from rep2-b: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:18] BROADCAST #17 from rep2-a: 5 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:22] BROADCAST #18 from rep1-a: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:22] BROADCAST #19 from rep1-b: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:22] BROADCAST #20 from rep1-c: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:23] BROADCAST #21 from rep3-a: 5 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:28] BROADCAST #22 from rep2-b: 4 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:28] BROADCAST #23 from rep2-a: 3 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:32] BROADCAST #24 from rep1-a: 1 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:32] BROADCAST #25 from rep1-b: 1 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:32] BROADCAST #26 from rep1-c: 1 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:38:38] BROADCAST #27 from rep2-a: 1 transaction(s) to [rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a]
+[2026-10-15 16:39:06] LEAVE rep3-a, members=[rep1-b, rep1-c, rep1-a, rep2-b, rep2-a]
+[2026-10-15 16:39:09] LEAVE rep1-b, members=[rep1-c, rep1-a, rep2-b, rep2-a]
+[2026-10-15 16:39:12] LEAVE rep1-c, members=[rep1-a, rep2-b, rep2-a]
+[2026-10-15 16:39:12] LEAVE rep2-b, members=[rep1-a, rep2-a]
+[2026-10-15 16:39:13] LEAVE rep1-a, members=[rep2-a]
+[2026-10-15 16:39:16] LEAVE rep2-a, members=[]

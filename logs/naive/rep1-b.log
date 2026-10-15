@@ -1,0 +1,248 @@
+[2026-10-15 16:37:41] Joined group group01 as rep1-b (getSyncedBalance: naive)
+[2026-10-15 16:37:41] Waiting for 3 replicas...
+[2026-10-15 16:37:42] Members: rep1-b, rep1-c, rep1-a
+[2026-10-15 16:37:42] > memberInfo
+[2026-10-15 16:37:42] Members: rep1-b, rep1-c, rep1-a
+[2026-10-15 16:37:43] > getSyncedBalance USD
+[2026-10-15 16:37:43] getSyncedBalance USD: waiting for outstanding transactions
+[2026-10-15 16:37:43] getSyncedBalance USD: 0.00 (naive, waited 0.0 s)
+[2026-10-15 16:37:44] > getQuickBalance USD
+[2026-10-15 16:37:44] getQuickBalance USD: 0.00
+[2026-10-15 16:37:44] > deposit USD 90
+[2026-10-15 16:37:44] Queued "deposit USD 90" as rep1-b 0
+[2026-10-15 16:37:45] > checkTxStatus 0
+[2026-10-15 16:37:45] Transaction rep1-b 0: outstanding, not applied yet
+[2026-10-15 16:37:46] > getSyncedBalance EUR
+[2026-10-15 16:37:46] getSyncedBalance EUR: waiting for outstanding transactions
+[2026-10-15 16:37:47] > getQuickBalance EUR
+[2026-10-15 16:37:47] getQuickBalance EUR: 0.00
+[2026-10-15 16:37:49] > deposit NOK 120
+[2026-10-15 16:37:49] Queued "deposit NOK 120" as rep1-b 1
+[2026-10-15 16:37:50] > getQuickBalance NOK
+[2026-10-15 16:37:50] getQuickBalance NOK: 0.00
+[2026-10-15 16:37:51] > sleep 6
+[2026-10-15 16:37:52] Applied 0. deposit USD 90 (rep1-a 0)
+[2026-10-15 16:37:52] Applied 1. deposit NOK 120 (rep1-a 1)
+[2026-10-15 16:37:52] Applied 2. deposit USD 90 (rep1-b 0)
+[2026-10-15 16:37:52] Applied 3. deposit NOK 120 (rep1-b 1)
+[2026-10-15 16:37:52] getSyncedBalance EUR: 182.14 (naive, waited 5.6 s)
+[2026-10-15 16:37:52] Applied 4. deposit USD 90 (rep1-c 0)
+[2026-10-15 16:37:52] Applied 5. deposit NOK 120 (rep1-c 1)
+[2026-10-15 16:37:57] Slept for 6.0 seconds.
+[2026-10-15 16:37:58] > getSyncedBalance USD
+[2026-10-15 16:37:58] getSyncedBalance USD: waiting for outstanding transactions
+[2026-10-15 16:37:58] getSyncedBalance USD: 306.00 (naive, waited 0.0 s)
+[2026-10-15 16:37:58] Applied 6. deposit EUR 75 (rep2-b 0)
+[2026-10-15 16:37:58] Applied 7. deposit USD 115 (rep2-b 1)
+[2026-10-15 16:37:58] Applied 8. deposit EUR 75 (rep2-a 0)
+[2026-10-15 16:37:58] Applied 9. deposit USD 115 (rep2-a 1)
+[2026-10-15 16:37:59] > addInterest NOK 15
+[2026-10-15 16:37:59] Queued "addInterest NOK 15" as rep1-b 2
+[2026-10-15 16:38:00] > getSyncedBalance USD
+[2026-10-15 16:38:00] getSyncedBalance USD: waiting for outstanding transactions
+[2026-10-15 16:38:01] > deposit DKK 120
+[2026-10-15 16:38:01] Queued "deposit DKK 120" as rep1-b 3
+[2026-10-15 16:38:01] > deposit NOK 70
+[2026-10-15 16:38:01] Queued "deposit NOK 70" as rep1-b 4
+[2026-10-15 16:38:02] Applied 10. addInterest NOK 15 (rep1-a 2)
+[2026-10-15 16:38:02] Applied 11. addInterest NOK 15 (rep1-b 2)
+[2026-10-15 16:38:02] Applied 12. deposit DKK 120 (rep1-b 3)
+[2026-10-15 16:38:02] Applied 13. deposit NOK 70 (rep1-b 4)
+[2026-10-15 16:38:02] getSyncedBalance USD: 740.61 (naive, waited 1.6 s)
+[2026-10-15 16:38:02] Applied 14. addInterest NOK 15 (rep1-c 2)
+[2026-10-15 16:38:02] Applied 15. deposit DKK 120 (rep1-c 3)
+[2026-10-15 16:38:02] Applied 16. deposit NOK 70 (rep1-c 4)
+[2026-10-15 16:38:02] > deposit GBP 50
+[2026-10-15 16:38:02] Queued "deposit GBP 50" as rep1-b 5
+[2026-10-15 16:38:03] > deposit USD 25
+[2026-10-15 16:38:03] Queued "deposit USD 25" as rep1-b 6
+[2026-10-15 16:38:03] Applied 17. deposit NOK 50 (rep3-a 0)
+[2026-10-15 16:38:04] > deposit CHF 30
+[2026-10-15 16:38:04] Queued "deposit CHF 30" as rep1-b 7
+[2026-10-15 16:38:05] > deposit EUR 25
+[2026-10-15 16:38:05] Queued "deposit EUR 25" as rep1-b 8
+[2026-10-15 16:38:07] > addInterest 10
+[2026-10-15 16:38:07] Queued "addInterest 10" as rep1-b 9
+[2026-10-15 16:38:07] > sleep 7
+[2026-10-15 16:38:08] Applied 18. addInterest USD 7 (rep2-b 2)
+[2026-10-15 16:38:08] Applied 19. deposit NOK 10 (rep2-b 3)
+[2026-10-15 16:38:08] Applied 20. deposit DKK 80 (rep2-b 4)
+[2026-10-15 16:38:08] Applied 21. deposit EUR 40 (rep2-b 5)
+[2026-10-15 16:38:08] Applied 22. deposit CHF 35 (rep2-b 6)
+[2026-10-15 16:38:08] Applied 23. addInterest USD 7 (rep2-a 2)
+[2026-10-15 16:38:08] Applied 24. deposit NOK 10 (rep2-a 3)
+[2026-10-15 16:38:08] Applied 25. deposit DKK 80 (rep2-a 4)
+[2026-10-15 16:38:12] Applied 26. deposit DKK 120 (rep1-a 3)
+[2026-10-15 16:38:12] Applied 27. deposit NOK 70 (rep1-a 4)
+[2026-10-15 16:38:12] Applied 28. deposit GBP 50 (rep1-a 5)
+[2026-10-15 16:38:12] Applied 29. deposit USD 25 (rep1-a 6)
+[2026-10-15 16:38:12] Applied 30. deposit CHF 30 (rep1-a 7)
+[2026-10-15 16:38:12] Applied 31. deposit EUR 25 (rep1-a 8)
+[2026-10-15 16:38:12] Applied 32. addInterest 10 (rep1-a 9)
+[2026-10-15 16:38:12] Applied 33. deposit GBP 50 (rep1-b 5)
+[2026-10-15 16:38:12] Applied 34. deposit USD 25 (rep1-b 6)
+[2026-10-15 16:38:12] Applied 35. deposit CHF 30 (rep1-b 7)
+[2026-10-15 16:38:12] Applied 36. deposit EUR 25 (rep1-b 8)
+[2026-10-15 16:38:12] Applied 37. addInterest 10 (rep1-b 9)
+[2026-10-15 16:38:12] Applied 38. deposit GBP 50 (rep1-c 5)
+[2026-10-15 16:38:12] Applied 39. deposit USD 25 (rep1-c 6)
+[2026-10-15 16:38:12] Applied 40. deposit CHF 30 (rep1-c 7)
+[2026-10-15 16:38:12] Applied 41. deposit EUR 25 (rep1-c 8)
+[2026-10-15 16:38:12] Applied 42. addInterest 10 (rep1-c 9)
+[2026-10-15 16:38:13] Applied 43. addInterest 7 (rep3-a 1)
+[2026-10-15 16:38:13] Applied 44. deposit EUR -150 (rep3-a 2)
+[2026-10-15 16:38:13] Applied 45. deposit USD -100 (rep3-a 3)
+[2026-10-15 16:38:14] Slept for 7.0 seconds.
+[2026-10-15 16:38:16] > getSyncedBalance EUR
+[2026-10-15 16:38:16] getSyncedBalance EUR: waiting for outstanding transactions
+[2026-10-15 16:38:16] getSyncedBalance EUR: 1557.53 (naive, waited 0.0 s)
+[2026-10-15 16:38:16] > getQuickBalance EUR
+[2026-10-15 16:38:16] getQuickBalance EUR: 1557.53
+[2026-10-15 16:38:18] > deposit EUR 110
+[2026-10-15 16:38:18] Queued "deposit EUR 110" as rep1-b 10
+[2026-10-15 16:38:18] Applied 46. deposit GBP 25 (rep2-b 7)
+[2026-10-15 16:38:18] Applied 47. deposit USD 95 (rep2-b 8)
+[2026-10-15 16:38:18] Applied 48. addInterest NOK 3 (rep2-b 9)
+[2026-10-15 16:38:18] Applied 49. deposit EUR 40 (rep2-a 5)
+[2026-10-15 16:38:18] Applied 50. deposit CHF 35 (rep2-a 6)
+[2026-10-15 16:38:18] Applied 51. deposit GBP 25 (rep2-a 7)
+[2026-10-15 16:38:18] Applied 52. deposit USD 95 (rep2-a 8)
+[2026-10-15 16:38:18] Applied 53. addInterest NOK 3 (rep2-a 9)
+[2026-10-15 16:38:19] > deposit USD 90
+[2026-10-15 16:38:19] Queued "deposit USD 90" as rep1-b 11
+[2026-10-15 16:38:20] > addInterest EUR 15
+[2026-10-15 16:38:20] Queued "addInterest EUR 15" as rep1-b 12
+[2026-10-15 16:38:21] > checkTxStatus 11
+[2026-10-15 16:38:21] Transaction rep1-b 11: outstanding, not applied yet
+[2026-10-15 16:38:22] Applied 54. deposit EUR 110 (rep1-a 10)
+[2026-10-15 16:38:22] Applied 55. deposit USD 90 (rep1-a 11)
+[2026-10-15 16:38:22] Applied 56. addInterest EUR 15 (rep1-a 12)
+[2026-10-15 16:38:22] Applied 57. deposit EUR 110 (rep1-b 10)
+[2026-10-15 16:38:22] Applied 58. deposit USD 90 (rep1-b 11)
+[2026-10-15 16:38:22] Applied 59. addInterest EUR 15 (rep1-b 12)
+[2026-10-15 16:38:22] Applied 60. deposit EUR 110 (rep1-c 10)
+[2026-10-15 16:38:22] Applied 61. deposit USD 90 (rep1-c 11)
+[2026-10-15 16:38:22] Applied 62. addInterest EUR 15 (rep1-c 12)
+[2026-10-15 16:38:22] > memberInfo
+[2026-10-15 16:38:22] Members: rep1-b, rep1-c, rep1-a, rep2-b, rep2-a, rep3-a
+[2026-10-15 16:38:23] > getHistory
+[2026-10-15 16:38:23] executed_list
+[2026-10-15 16:38:23] 0. 2026-10-15 16:37:52 deposit USD 90
+[2026-10-15 16:38:23] 1. 2026-10-15 16:37:52 deposit NOK 120
+[2026-10-15 16:38:23] 2. 2026-10-15 16:37:52 deposit USD 90
+[2026-10-15 16:38:23] 3. 2026-10-15 16:37:52 deposit NOK 120
+[2026-10-15 16:38:23] 4. 2026-10-15 16:37:52 deposit USD 90
+[2026-10-15 16:38:23] 5. 2026-10-15 16:37:52 deposit NOK 120
+[2026-10-15 16:38:23] 6. 2026-10-15 16:37:58 deposit EUR 75
+[2026-10-15 16:38:23] 7. 2026-10-15 16:37:58 deposit USD 115
+[2026-10-15 16:38:23] 8. 2026-10-15 16:37:58 deposit EUR 75
+[2026-10-15 16:38:23] 9. 2026-10-15 16:37:58 deposit USD 115
+[2026-10-15 16:38:23] 10. 2026-10-15 16:38:02 addInterest NOK 15
+[2026-10-15 16:38:23] 11. 2026-10-15 16:38:02 addInterest NOK 15
+[2026-10-15 16:38:23] 12. 2026-10-15 16:38:02 deposit DKK 120
+[2026-10-15 16:38:23] 13. 2026-10-15 16:38:02 deposit NOK 70
+[2026-10-15 16:38:23] 14. 2026-10-15 16:38:02 addInterest NOK 15
+[2026-10-15 16:38:23] 15. 2026-10-15 16:38:02 deposit DKK 120
+[2026-10-15 16:38:23] 16. 2026-10-15 16:38:02 deposit NOK 70
+[2026-10-15 16:38:23] 17. 2026-10-15 16:38:03 deposit NOK 50
+[2026-10-15 16:38:23] 18. 2026-10-15 16:38:08 addInterest USD 7
+[2026-10-15 16:38:23] 19. 2026-10-15 16:38:08 deposit NOK 10
+[2026-10-15 16:38:23] 20. 2026-10-15 16:38:08 deposit DKK 80
+[2026-10-15 16:38:23] 21. 2026-10-15 16:38:08 deposit EUR 40
+[2026-10-15 16:38:23] 22. 2026-10-15 16:38:08 deposit CHF 35
+[2026-10-15 16:38:23] 23. 2026-10-15 16:38:08 addInterest USD 7
+[2026-10-15 16:38:23] 24. 2026-10-15 16:38:08 deposit NOK 10
+[2026-10-15 16:38:23] 25. 2026-10-15 16:38:08 deposit DKK 80
+[2026-10-15 16:38:23] 26. 2026-10-15 16:38:12 deposit DKK 120
+[2026-10-15 16:38:23] 27. 2026-10-15 16:38:12 deposit NOK 70
+[2026-10-15 16:38:23] 28. 2026-10-15 16:38:12 deposit GBP 50
+[2026-10-15 16:38:23] 29. 2026-10-15 16:38:12 deposit USD 25
+[2026-10-15 16:38:23] 30. 2026-10-15 16:38:12 deposit CHF 30
+[2026-10-15 16:38:23] 31. 2026-10-15 16:38:12 deposit EUR 25
+[2026-10-15 16:38:23] 32. 2026-10-15 16:38:12 addInterest 10
+[2026-10-15 16:38:23] 33. 2026-10-15 16:38:12 deposit GBP 50
+[2026-10-15 16:38:23] 34. 2026-10-15 16:38:12 deposit USD 25
+[2026-10-15 16:38:23] 35. 2026-10-15 16:38:12 deposit CHF 30
+[2026-10-15 16:38:23] 36. 2026-10-15 16:38:12 deposit EUR 25
+[2026-10-15 16:38:23] 37. 2026-10-15 16:38:12 addInterest 10
+[2026-10-15 16:38:23] 38. 2026-10-15 16:38:12 deposit GBP 50
+[2026-10-15 16:38:23] 39. 2026-10-15 16:38:12 deposit USD 25
+[2026-10-15 16:38:23] 40. 2026-10-15 16:38:12 deposit CHF 30
+[2026-10-15 16:38:23] 41. 2026-10-15 16:38:12 deposit EUR 25
+[2026-10-15 16:38:23] 42. 2026-10-15 16:38:12 addInterest 10
+[2026-10-15 16:38:23] 43. 2026-10-15 16:38:13 addInterest 7
+[2026-10-15 16:38:23] 44. 2026-10-15 16:38:13 deposit EUR -150
+[2026-10-15 16:38:23] 45. 2026-10-15 16:38:13 deposit USD -100
+[2026-10-15 16:38:23] 46. 2026-10-15 16:38:18 deposit GBP 25
+[2026-10-15 16:38:23] 47. 2026-10-15 16:38:18 deposit USD 95
+[2026-10-15 16:38:23] 48. 2026-10-15 16:38:18 addInterest NOK 3
+[2026-10-15 16:38:23] 49. 2026-10-15 16:38:18 deposit EUR 40
+[2026-10-15 16:38:23] 50. 2026-10-15 16:38:18 deposit CHF 35
+[2026-10-15 16:38:23] 51. 2026-10-15 16:38:18 deposit GBP 25
+[2026-10-15 16:38:23] 52. 2026-10-15 16:38:18 deposit USD 95
+[2026-10-15 16:38:23] 53. 2026-10-15 16:38:18 addInterest NOK 3
+[2026-10-15 16:38:23] 54. 2026-10-15 16:38:22 deposit EUR 110
+[2026-10-15 16:38:23] 55. 2026-10-15 16:38:22 deposit USD 90
+[2026-10-15 16:38:23] 56. 2026-10-15 16:38:22 addInterest EUR 15
+[2026-10-15 16:38:23] 57. 2026-10-15 16:38:22 deposit EUR 110
+[2026-10-15 16:38:23] 58. 2026-10-15 16:38:22 deposit USD 90
+[2026-10-15 16:38:23] 59. 2026-10-15 16:38:22 addInterest EUR 15
+[2026-10-15 16:38:23] 60. 2026-10-15 16:38:22 deposit EUR 110
+[2026-10-15 16:38:23] 61. 2026-10-15 16:38:22 deposit USD 90
+[2026-10-15 16:38:23] 62. 2026-10-15 16:38:22 addInterest EUR 15
+[2026-10-15 16:38:23] outstanding_collection
+[2026-10-15 16:38:23] > cleanHistory
+[2026-10-15 16:38:23] History cleaned.
+[2026-10-15 16:38:23] Applied 63. deposit DKK 10 (rep3-a 4)
+[2026-10-15 16:38:23] Applied 64. deposit CHF 30 (rep3-a 5)
+[2026-10-15 16:38:23] Applied 65. deposit NOK -100 (rep3-a 6)
+[2026-10-15 16:38:23] Applied 66. deposit GBP 50 (rep3-a 7)
+[2026-10-15 16:38:23] Applied 67. addInterest 20 (rep3-a 8)
+[2026-10-15 16:38:24] > deposit EUR 110
+[2026-10-15 16:38:24] Queued "deposit EUR 110" as rep1-b 13
+[2026-10-15 16:38:25] > sleep 8
+[2026-10-15 16:38:28] Applied 68. deposit USD 120 (rep2-b 10)
+[2026-10-15 16:38:28] Applied 69. deposit EUR 130 (rep2-b 11)
+[2026-10-15 16:38:28] Applied 70. addInterest 10 (rep2-b 12)
+[2026-10-15 16:38:28] Applied 71. deposit NOK 90 (rep2-b 13)
+[2026-10-15 16:38:28] Applied 72. deposit USD 120 (rep2-a 10)
+[2026-10-15 16:38:28] Applied 73. deposit EUR 130 (rep2-a 11)
+[2026-10-15 16:38:28] Applied 74. addInterest 10 (rep2-a 12)
+[2026-10-15 16:38:32] Applied 75. deposit EUR 110 (rep1-a 13)
+[2026-10-15 16:38:32] Applied 76. deposit EUR 110 (rep1-b 13)
+[2026-10-15 16:38:32] Applied 77. deposit EUR 110 (rep1-c 13)
+[2026-10-15 16:38:33] Slept for 8.0 seconds.
+[2026-10-15 16:38:34] > getSyncedBalance USD
+[2026-10-15 16:38:34] getSyncedBalance USD: waiting for outstanding transactions
+[2026-10-15 16:38:34] getSyncedBalance USD: 5494.95 (naive, waited 0.0 s)
+[2026-10-15 16:38:35] > getQuickBalance USD
+[2026-10-15 16:38:35] getQuickBalance USD: 5494.95
+[2026-10-15 16:38:35] > sleep 30
+[2026-10-15 16:38:38] Applied 78. deposit NOK 90 (rep2-a 13)
+[2026-10-15 16:39:05] Slept for 30.0 seconds.
+[2026-10-15 16:39:06] > getSyncedBalance USD
+[2026-10-15 16:39:06] getSyncedBalance USD: waiting for outstanding transactions
+[2026-10-15 16:39:06] getSyncedBalance USD: 5503.95 (naive, waited 0.0 s)
+[2026-10-15 16:39:07] > getQuickBalance USD
+[2026-10-15 16:39:07] getQuickBalance USD: 5503.95
+[2026-10-15 16:39:08] > getHistory
+[2026-10-15 16:39:08] executed_list
+[2026-10-15 16:39:08] 63. 2026-10-15 16:38:23 deposit DKK 10
+[2026-10-15 16:39:08] 64. 2026-10-15 16:38:23 deposit CHF 30
+[2026-10-15 16:39:08] 65. 2026-10-15 16:38:23 deposit NOK -100
+[2026-10-15 16:39:08] 66. 2026-10-15 16:38:23 deposit GBP 50
+[2026-10-15 16:39:08] 67. 2026-10-15 16:38:23 addInterest 20
+[2026-10-15 16:39:08] 68. 2026-10-15 16:38:28 deposit USD 120
+[2026-10-15 16:39:08] 69. 2026-10-15 16:38:28 deposit EUR 130
+[2026-10-15 16:39:08] 70. 2026-10-15 16:38:28 addInterest 10
+[2026-10-15 16:39:08] 71. 2026-10-15 16:38:28 deposit NOK 90
+[2026-10-15 16:39:08] 72. 2026-10-15 16:38:28 deposit USD 120
+[2026-10-15 16:39:08] 73. 2026-10-15 16:38:28 deposit EUR 130
+[2026-10-15 16:39:08] 74. 2026-10-15 16:38:28 addInterest 10
+[2026-10-15 16:39:08] 75. 2026-10-15 16:38:32 deposit EUR 110
+[2026-10-15 16:39:08] 76. 2026-10-15 16:38:32 deposit EUR 110
+[2026-10-15 16:39:08] 77. 2026-10-15 16:38:32 deposit EUR 110
+[2026-10-15 16:39:08] 78. 2026-10-15 16:38:38 deposit NOK 90
+[2026-10-15 16:39:08] outstanding_collection
+[2026-10-15 16:39:09] > exit
+[2026-10-15 16:39:09] Exit requested.
