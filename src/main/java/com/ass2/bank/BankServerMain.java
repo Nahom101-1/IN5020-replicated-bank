@@ -6,8 +6,18 @@ import java.io.FileNotFoundException;
 
 import com.ass2.bank.cli.BatchInput;
 
+
+/*
+* Entry point for the bank server application.
+* Validates startup arguments and initializes the selected input mode.
+*/
 public class BankServerMain {
 
+    /*
+    * Parses and validates the number of replicas.
+    * @param value the replica count provided as a string.
+    * @return the parsed positive integer, or null if invalid.
+    */
     private static Integer parseReplicaCount(String value){
         try { 
             int count = Integer.parseInt(value);
@@ -25,6 +35,10 @@ public class BankServerMain {
     }
 
 
+    /*
+    * Validates the startup arguments and starts the appropriate input mode
+    * @param args command-line arguments containing the servcer address, account name, replica count, currency file and optional input file.
+    */
     public static void main(String[] args) {
 
         if(args.length < 4 || args.length > 5){
