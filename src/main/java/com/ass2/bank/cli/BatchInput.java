@@ -17,6 +17,15 @@ public class BatchInput {
     private static final long MIN_DELAY_MS = 500; 
     private static final long MAX_DELAY_MS = 1501; 
 
+    private final CommandProcessor processor;
+
+    /*
+    * @param processor runs each command against this replica's account.
+    */
+    public BatchInput(CommandProcessor processor){
+        this.processor = processor;
+    }
+
     /*
     * Pauses execution for a random duration between 500 and 1500 milliseconds. 
     */
@@ -32,13 +41,11 @@ public class BatchInput {
     * @throws FileNotFoundException if the specified file cannot be opened.
     */
     public void run(String filename) throws FileNotFoundException{
-        CommandProcessor processor = new CommandProcessor();
-
         try(Scanner scanner = new Scanner(new File(filename))){
             while(scanner.hasNextLine()){
                 String line = scanner.nextLine();
                 String result = processor.process(line);
-                Log.info(result);
+                Log.lines(result);
                 
                 if(line.trim().equals("exit")){
                     break;
@@ -53,14 +60,5 @@ public class BatchInput {
             }
         }
     }
-    
-    // For testing purposes. Remove after integration.
-    public static void main(String[] args){
-        BatchInput input = new BatchInput();
-        try {
-            input.run("IN5020-replicated-bank/input/Rep3.txt");
-        } catch (FileNotFoundException e) {
-            System.out.println("File not found.");
-        }
-    }
+
 }

@@ -65,15 +65,18 @@ class AccountSyncTest {
     }
 
     @Test
-    void markerUsesTheSameCounterAsDeposits() {
+    void markerDoesNotUseTheDepositCounter() {
+        // checkTxStatus 0 in input/Rep1.txt refers to the first deposit, even though a
+        // getSyncedBalance comes before it.
         Account account = new Account("bank1", RATES);
         SyncedBalance sync = attach(account, "ordered");
 
-        account.issue("deposit NOK 100");
-        sync.request("NOK");
-        Transaction next = account.issue("deposit NOK 5");
+        sync.request("USD");
+        Transaction first = account.issue("deposit USD 90");
+        Transaction second = account.issue("deposit NOK 120");
 
-        assertEquals("bank1 2", next.uniqueId());
+        assertEquals("bank1 0", first.uniqueId());
+        assertEquals("bank1 1", second.uniqueId());
     }
 
     @Test

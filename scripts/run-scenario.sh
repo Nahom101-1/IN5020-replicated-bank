@@ -32,7 +32,7 @@ grep -q "listening" "$LOGS/delivery.log" || { echo "Delivery server did not star
 
 BANKS=()
 start_bank() {   # start_bank <log name> <batch file>
-    SYNC="$MODE" scripts/run-bank.sh "localhost:$PORT" "$ACCOUNT" 3 "$RATES" "$2" > "$LOGS/$1.log" 2>&1 &
+    SYNC="$MODE" NAME="$1" scripts/run-bank.sh "localhost:$PORT" "$ACCOUNT" 3 "$RATES" "$2" > "$LOGS/$1.log" 2>&1 &
     BANKS+=($!)
     echo "$(date +%T) started $1 ($2)"
 }

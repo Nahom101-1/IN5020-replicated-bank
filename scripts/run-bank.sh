@@ -6,6 +6,7 @@
 #
 # Environment:
 #   SYNC=naive|ordered  getSyncedBalance implementation (default: ordered)
+#   NAME=<name>         instance name, unique in the group (default: <host name>-<process id>)
 #   HOST=<ip>           this machine's IP address; required when the delivery server is on
 #                       another machine, because it calls back to this bank server over RMI
 set -euo pipefail
@@ -15,6 +16,9 @@ JAR="${JAR:-$ROOT/target/bank.jar}"
 OPTS=("-Dsync=${SYNC:-ordered}")
 if [[ -n "${HOST:-}" ]]; then
     OPTS+=("-Djava.rmi.server.hostname=$HOST")
+fi
+if [[ -n "${NAME:-}" ]]; then
+    OPTS+=("-Dname=$NAME")
 fi
 
 exec java "${OPTS[@]}" -jar "$JAR" "$@"

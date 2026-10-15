@@ -11,4 +11,17 @@ public class Log {
         LocalDateTime now = LocalDateTime.now();
         System.out.println("[" + now.format(FORMATTER) + "] " + message);
     }
+
+    /*
+    * Logs a message that may span several lines, giving every line its own timestamp.
+    * An empty message logs nothing.
+    */
+    public static synchronized void lines(String message){
+        if (message.isEmpty()) {
+            return;
+        }
+        for (String line : message.split("\n")) {
+            info(line);
+        }
+    }
 }

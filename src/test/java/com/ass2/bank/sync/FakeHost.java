@@ -56,8 +56,7 @@ final class FakeHost implements SyncHost {
         return name;
     }
 
-    @Override
-    public synchronized String nextUniqueId() {
+    synchronized String nextUniqueId() {
         return name + " " + outstandingCounter++;
     }
 

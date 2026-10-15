@@ -8,11 +8,19 @@ import com.ass2.bank.util.Log;
 */
 public class InteractiveInput {
 
+    private final CommandProcessor processor;
+
+    /*
+    * @param processor runs each command against this replica's account.
+    */
+    public InteractiveInput(CommandProcessor processor){
+        this.processor = processor;
+    }
+
     /*
     * Continously reads the commands untill exit.
     */
     public void run(){
-        CommandProcessor processor = new CommandProcessor();
         Scanner scanner = new Scanner(System.in);
 
         while(true){
@@ -23,17 +31,11 @@ public class InteractiveInput {
 
             String line = scanner.nextLine();
             String result = processor.process(line);
-            Log.info(result);
+            Log.lines(result);
 
             if(line.trim().equals("exit")){
                 break;
             }
         }
-    }
-
-    // For testing purposes. Remove after integration.
-    public static void main(String[] args) {
-        InteractiveInput input = new InteractiveInput();
-        input.run();
     }
 }

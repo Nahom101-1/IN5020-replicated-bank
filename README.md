@@ -52,8 +52,19 @@ scripts/run-bank.sh 10.0.0.5:1099 group01 3 input/TradingRate.txt input/Rep1.txt
 Without the scripts:
 ```bash
 java -cp target/bank.jar com.ass2.delivery.DeliveryServerMain 1099
-java -Dsync=ordered -jar target/bank.jar 10.0.0.5:1099 group01 3 input/TradingRate.txt input/Rep1.txt
+java -Dsync=ordered -Dname=rep1-a -jar target/bank.jar 10.0.0.5:1099 group01 3 input/TradingRate.txt input/Rep1.txt
 ```
+
+**Instance names.** Every bank server needs a name that is unique in the group; its transaction
+ids are `<name> <counter>`. Set it with `-Dname=<name>` (`NAME=<name>` for `run-bank.sh`). Without
+it the name is `<host name>-<process id>`.
+
+**What a bank server does.** It reads the currency file, connects to the delivery server, joins
+the group `<account name>` (a replica that joins later first receives the state of an existing
+one), waits until `<number of replicas>` bank servers are in the group, broadcasts its
+`outstanding_collection` every 10 s and runs the commands. Every applied transaction is logged as
+`Applied <n>. <command> (<id>)`, with the same numbers on every replica. On `exit` it sends what is
+still outstanding, waits until that has been delivered, and leaves the group.
 
 **Several machines.** RMI calls go both ways: the bank servers call the delivery server, and
 the delivery server calls back to every bank server. Each JVM must therefore announce an address
@@ -107,7 +118,8 @@ marker is delivered, exactly the transactions ordered before it have been applie
 balance is the one at the time of the request. It is answered within one broadcast round,
 however many commands arrive in the meantime.
 
-Unlike `deposit` and `addInterest`, the marker:
+Markers have their own ids, `<name> sync-<n>`, so deposits and addInterest keep the ids
+0, 1, 2, ... that `checkTxStatus` refers to. Unlike `deposit` and `addInterest`, the marker:
 - is executed only by the replica that issued it (the others skip it);
 - is removed from `outstanding_collection` but not added to `executed_list`, and does not
   increase `order_counter`, so all replicas keep identical histories and counters.
