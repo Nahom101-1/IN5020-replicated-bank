@@ -10,10 +10,7 @@ public class InteractiveInput {
 
     private final CommandProcessor processor;
 
-    /*
-    * @param processor runs each command against this replica's account.
-    */
-    public InteractiveInput(CommandProcessor processor){
+    public InteractiveInput(CommandProcessor processor) {
         this.processor = processor;
     }
 
@@ -30,8 +27,11 @@ public class InteractiveInput {
             }
 
             String line = scanner.nextLine();
+            Log.info("> " + line.trim());
             String result = processor.process(line);
-            Log.lines(result);
+            if(result != null){
+                Log.info(result);
+            }
 
             if(line.trim().equals("exit")){
                 break;

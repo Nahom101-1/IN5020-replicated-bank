@@ -33,11 +33,7 @@ public final class OrderedSyncedBalance implements SyncedBalance {
     /** This server's markers that have not been delivered yet, by uniqueId. */
     private final Map<String, PendingRequest> waiting = new ConcurrentHashMap<>();
 
-    /**
-     * Numbers this server's markers. Markers get their own ids, "<instance name> sync-<n>", instead
-     * of using outstanding_counter, so deposit and addInterest keep the ids 0, 1, 2, ... that
-     * checkTxStatus refers to.
-     */
+    /** Numbers the markers. They do not use outstanding_counter, which only counts deposit/addInterest. */
     private final AtomicInteger markerCounter = new AtomicInteger();
 
     OrderedSyncedBalance(SyncHost host, Consumer<String> out) {
@@ -47,7 +43,7 @@ public final class OrderedSyncedBalance implements SyncedBalance {
 
     @Override
     public void request(String currency) {
-        String uniqueId = host.instanceName() + " sync-" + markerCounter.getAndIncrement();
+        String uniqueId = host.instanceName() + " sync" + markerCounter.getAndIncrement();
         Transaction marker = SyncMarker.create(currency, uniqueId);
         // Register before adding to outstanding_collection, so the marker cannot be delivered
         // before we know about it.

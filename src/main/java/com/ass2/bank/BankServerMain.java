@@ -14,35 +14,27 @@ import com.ass2.common.Config;
 import com.ass2.common.MessageDelivery;
 
 import java.io.FileNotFoundException;
-import java.net.InetAddress;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.List;
 import java.util.Map;
 
-
-/*
-* Entry point for the bank server application.
-*
-* Usage: java [-Dsync=naive|ordered] [-Dname=<instance name>] -jar bank.jar
-*        <server ip:port> <account name> <number of replicas> <currency file> [batch file]
-*
-* Startup: reads the currency file, connects to the Message Delivery server, joins the group
-* <account name>, waits until <number of replicas> bank servers have joined, starts the 10 s
-* broadcast of outstanding_collection and then runs the commands interactively or from the file.
-*/
+/**
+ * Entry point for the bank server.
+ * Usage: <server address> <account name> <number of replicas> <currency file> [file name]
+ */
 public class BankServerMain {
 
-    /* How often to check the member list while waiting for all replicas to join. */
-    private static final long MEMBER_POLL_MILLIS = 200;
-
-    /*
-    * Parses and validates the number of replicas.
-    * @param value the replica count provided as a string.
-    * @return the parsed positive integer, or null if invalid.
-    */
+    /**
+     * Parses and validates the number of replicas.
+     * @param value the replica count provided as a string.
+     * @return the parsed positive integer, or null if invalid.
+     */
     private static Integer parseReplicaCount(String value){
         try {
             int count = Integer.parseInt(value);
@@ -59,33 +51,16 @@ public class BankServerMain {
         }
     }
 
-    /*
-    * The name of this bank server instance, the first part of its transaction ids. It must be
-    * unique in the group. Taken from -Dname if given, otherwise "<host name>-<process id>".
-    */
-    private static String instanceName(){
-        String name = System.getProperty("name");
-        if(name == null || name.isBlank()){
-            String host;
-            try {
-                host = InetAddress.getLocalHost().getHostName();
-            } catch (Exception e) {
-                host = "bank";
-            }
-            name = host + "-" + ProcessHandle.current().pid();
-        }
-        return name.trim().replaceAll("\\s+", "-"); // ids are "<name> <counter>", so no spaces
-    }
-
-
-    /*
-    * Validates the startup arguments, connects to the delivery server and runs the commands.
-    * @param args command-line arguments containing the server address, account name, replica count, currency file and optional input file.
-    */
+    /**
+     * Starts the bank server: joins the group, waits for the other replicas,
+     * then reads commands until exit.
+     * @param args command-line arguments containing the server address, account name, replica count, currency file and optional input file.
+     */
     public static void main(String[] args) {
 
         if(args.length < 4 || args.length > 5){
-            System.out.println("Usage: <server ip:port> <account name> <number of replicas> <currency file> [batch file]");
+            System.out.println("Invalid number of arguments");
+            System.out.println("Usage: <server address> <account name> <number of replicas> <currency file> [file name]");
             return;
         }
 
@@ -97,87 +72,110 @@ public class BankServerMain {
         }
         String currencyFile = args[3];
         String inputFile = (args.length == 5) ? args[4] : null;
-        String mode = (inputFile != null) ? "Batch mode" : "Interactive mode";
-        String name = instanceName();
-        String syncMode = System.getProperty(SyncedBalance.MODE_PROPERTY, "ordered");
 
-        Log.info("Instance name: " + name);
-        Log.info("Server Address: " + serverAddress);
-        Log.info("Account Name: " + accountName);
-        Log.info("Number of replicas: " + numberOfReplicas);
-        Log.info("CurrencyFile: " + currencyFile);
-        Log.info("Mode: " + mode + ", getSyncedBalance: " + syncMode);
-
+        Map<String, Double> rates;
         try {
-            run(serverAddress, accountName, numberOfReplicas, currencyFile, inputFile, name, syncMode);
-        } catch (Exception e) {
-            Log.info("Bank server stopped: " + e);
-            System.exit(1);
+            rates = CurrencyRates.load(Path.of(currencyFile));
+        } catch (IOException | IllegalArgumentException e) {
+            System.out.println("Could not read currency file: " + e.getMessage());
+            return;
         }
-        // RMI keeps non-daemon threads running, so the process has to be ended explicitly.
+
+        // Unique name in the group, the first part of every transaction id. -Dname=<name> sets
+        // it (the run scripts use rep1-a, rep1-b, ...); ids are "<name> <counter>", so no spaces.
+        String replicaName = System.getProperty("name", accountName + "-" + ProcessHandle.current().pid())
+                .trim().replaceAll("\\s+", "-");
+        Account account = new Account(replicaName, rates);
+        SyncedBalance syncedBalance = SyncedBalance.create(
+                System.getProperty(SyncedBalance.MODE_PROPERTY, "ordered"), account, Log::info);
+        account.useSyncedBalance(syncedBalance);
+        BankReplicaImpl replica = new BankReplicaImpl(account);
+
+        MessageDelivery delivery;
+        try {
+            delivery = connect(serverAddress);
+            BankReplica stub = (BankReplica) UnicastRemoteObject.exportObject(replica, 0);
+            delivery.join(accountName, replicaName, stub);
+        } catch (RemoteException | NotBoundException | IllegalArgumentException e) {
+            System.out.println("Could not join the group at " + serverAddress + ": " + e.getMessage());
+            System.exit(1);
+            return;
+        }
+        Log.info("Joined group " + accountName + " as " + replicaName
+                + " (getSyncedBalance: " + syncedBalance.mode() + ")");
+
+        // The first replicas wait for each other. A late replica already sees enough members.
+        // The member list is read from the delivery server, not from the membership callbacks:
+        // those are sent from several threads and can arrive out of order, and an old, shorter
+        // list arriving last would make this wait forever.
+        List<String> members;
+        try {
+            Log.info("Waiting for " + numberOfReplicas + " replicas...");
+            members = delivery.getMembers(accountName);
+            while (members.size() < numberOfReplicas) {
+                Thread.sleep(200);
+                members = delivery.getMembers(accountName);
+            }
+        } catch (RemoteException | InterruptedException e) {
+            Log.info("Stopped while waiting for the other replicas: " + e.getMessage());
+            System.exit(1);
+            return;
+        }
+        Log.info("Members: " + String.join(", ", members));
+
+        OutstandingSender sender = new OutstandingSender(account, delivery, replicaName);
+        sender.start();
+
+        CommandProcessor processor = new CommandProcessor(account, syncedBalance, replica);
+        runCommands(inputFile, processor);
+
+        // Send what is still outstanding before leaving, so our last transactions reach every
+        // replica and our last getSyncedBalance is answered.
+        try {
+            sender.flush();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        syncedBalance.close();
+        try {
+            delivery.leave(replicaName);
+        } catch (RemoteException e) {
+            System.out.println("Could not leave the group: " + e.getMessage());
+        }
         System.exit(0);
     }
 
-    private static void run(String serverAddress, String accountName, int numberOfReplicas, String currencyFile,
-                            String inputFile, String name, String syncMode) throws Exception {
-        // The replica: balance 0.0, empty lists and counters at 0.
-        Map<String, Double> rates = CurrencyRates.load(Path.of(currencyFile));
-        Account account = new Account(name, rates);
-        SyncedBalance syncedBalance = SyncedBalance.create(syncMode, account, Log::info);
-        account.useSyncedBalance(syncedBalance);
+    /** Finds the Message Delivery server. The address is "host:port" or just "host". */
+    private static MessageDelivery connect(String serverAddress) throws RemoteException, NotBoundException {
+        String host = serverAddress;
+        int port = Config.DEFAULT_DELIVERY_PORT;
 
-        // Connect to the Message Delivery server: "<ip>:<port>", port 1099 if left out.
         int colon = serverAddress.lastIndexOf(':');
-        String host = (colon < 0) ? serverAddress : serverAddress.substring(0, colon);
-        int port = (colon < 0) ? Config.DEFAULT_DELIVERY_PORT : Integer.parseInt(serverAddress.substring(colon + 1));
-        MessageDelivery delivery = (MessageDelivery) LocateRegistry.getRegistry(host, port).lookup(Config.DELIVERY_BINDING);
-
-        // Export our replica so the delivery server can call deliver(), and join the group.
-        // If the group already has members, the delivery server copies the state of one of
-        // them into this replica before adding it.
-        BankReplicaImpl replica = new BankReplicaImpl(account);
-        BankReplica stub = (BankReplica) UnicastRemoteObject.exportObject(replica, 0);
-        delivery.join(accountName, name, stub);
-        Log.info("Joined group " + accountName + ", waiting for " + numberOfReplicas + " replicas");
-
-        // Wait for all initial replicas. The delivery server's member list is checked directly:
-        // membership callbacks are sent from several threads and can arrive out of order.
-        List<String> members = delivery.getMembers(accountName);
-        while (members.size() < numberOfReplicas) {
-            Thread.sleep(MEMBER_POLL_MILLIS);
-            members = delivery.getMembers(accountName);
+        if (colon >= 0) {
+            host = serverAddress.substring(0, colon);
+            try {
+                port = Integer.parseInt(serverAddress.substring(colon + 1));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Invalid port in " + serverAddress);
+            }
         }
-        Log.info("Group " + accountName + " is ready: " + members);
 
-        OutstandingSender sender = new OutstandingSender(account, delivery, name);
-        sender.start();
+        Registry registry = LocateRegistry.getRegistry(host, port);
+        return (MessageDelivery) registry.lookup(Config.DELIVERY_BINDING);
+    }
 
-        CommandProcessor processor = new CommandProcessor(account, syncedBalance, () -> {
+    /** Reads commands from the file, or from the terminal if there is no file. */
+    private static void runCommands(String inputFile, CommandProcessor processor) {
+        if(inputFile == null){
+            InteractiveInput input = new InteractiveInput(processor);
+            input.run();
+        } else {
+            BatchInput input = new BatchInput(processor);
             try {
-                return delivery.getMembers(accountName);
-            } catch (RemoteException e) {
-                return replica.members(); // last list the delivery server sent us
+                input.run(inputFile);
+            } catch (FileNotFoundException e) {
+                System.out.println("File not found: " + inputFile);
             }
-        });
-
-        try {
-            if(inputFile == null){
-                new InteractiveInput(processor).run();
-            } else {
-                new BatchInput(processor).run(inputFile);
-            }
-        } catch (FileNotFoundException e) {
-            Log.info("File not found: " + inputFile);
-        } finally {
-            sender.flush();
-            syncedBalance.close();
-            try {
-                delivery.leave(name);
-            } catch (RemoteException e) {
-                Log.info("Could not leave the group: " + e.getMessage());
-            }
-            UnicastRemoteObject.unexportObject(replica, true);
-            Log.info("Bank server " + name + " exited");
         }
     }
 }

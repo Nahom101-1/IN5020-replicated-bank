@@ -19,10 +19,7 @@ public class BatchInput {
 
     private final CommandProcessor processor;
 
-    /*
-    * @param processor runs each command against this replica's account.
-    */
-    public BatchInput(CommandProcessor processor){
+    public BatchInput(CommandProcessor processor) {
         this.processor = processor;
     }
 
@@ -44,8 +41,14 @@ public class BatchInput {
         try(Scanner scanner = new Scanner(new File(filename))){
             while(scanner.hasNextLine()){
                 String line = scanner.nextLine();
+                if(line.isBlank()){
+                    continue;
+                }
+                Log.info("> " + line.trim());
                 String result = processor.process(line);
-                Log.lines(result);
+                if(result != null){
+                    Log.info(result);
+                }
                 
                 if(line.trim().equals("exit")){
                     break;
@@ -60,5 +63,4 @@ public class BatchInput {
             }
         }
     }
-
 }

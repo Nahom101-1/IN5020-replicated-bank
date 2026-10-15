@@ -1,50 +1,38 @@
 package com.ass2.bank.cli;
 
 import com.ass2.bank.core.Account;
+import com.ass2.bank.core.BankReplicaImpl;
 import com.ass2.bank.sync.SyncMarker;
 import com.ass2.bank.sync.SyncedBalance;
 import com.ass2.bank.util.Log;
 import com.ass2.common.Transaction;
 
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.Supplier;
 
-/*
-* Parses and validates bank commands received from interactive or batch input, and runs each one
-* against this replica's account. Dispatches each command to its corresponding handler.
+/**
+* Parses bank commands from interactive or batch input and runs them on the account.
 */
 public class CommandProcessor {
 
-    /* Currency used by getQuickBalance and getSyncedBalance when none is given. */
+    /** Used by getQuickBalance and getSyncedBalance when no currency is given. */
     private static final String DEFAULT_CURRENCY = "USD";
-
-    /* Format of the execution timestamps printed by getHistory. */
-    private static final DateTimeFormatter HISTORY_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final Account account;
     private final SyncedBalance syncedBalance;
-    private final Supplier<List<String>> members;
+    private final BankReplicaImpl replica;
 
-    /*
-    * @param account       this replica of the account
-    * @param syncedBalance the getSyncedBalance implementation (naive or ordered)
-    * @param members       returns the names of the replicas currently in the group
-    */
-    public CommandProcessor(Account account, SyncedBalance syncedBalance, Supplier<List<String>> members) {
+    public CommandProcessor(Account account, SyncedBalance syncedBalance, BankReplicaImpl replica) {
         this.account = account;
         this.syncedBalance = syncedBalance;
-        this.members = members;
+        this.replica = replica;
     }
 
-    /*
+    /**
     * Parses an input line and dispatches it to the appropriate command handler.
     *
     * @param line the command entered by the user
-    * @return the result of processing the command, or an error message. It may have several
-    *         lines (getHistory); the caller logs each line with its own timestamp.
+    * @return the result of processing the command, or an error message.
     */
     public String process(String line){
         line = line.trim();
@@ -71,7 +59,7 @@ public class CommandProcessor {
 
     }
 
-    /*
+    /**
     * Parses a string into a finite double value.
     *
     * @param value the numeric string to parse
@@ -86,18 +74,8 @@ public class CommandProcessor {
         return parsed;
     }
 
-    /*
-    * Returns an error message if the currency is not in the currency file, otherwise null.
-    * Unknown currencies are rejected before anything is broadcast, so they never reach the
-    * other replicas.
-    */
-    private String checkCurrency(String currency){
-        return account.hasRate(currency) ? null : "Unknown currency " + currency + ".";
-    }
-
-    /*
-    * Creates a deposit transaction and adds it to outstanding_collection.
-    * It is applied when it comes back from the delivery server in the total order.
+    /**
+    * Queues "deposit <Currency> <amount>" for broadcast.
     */
     private String handleDeposit(String[] parts){
         if(parts.length != 3){
@@ -105,112 +83,89 @@ public class CommandProcessor {
         }
 
         String currency = parts[1];
-        String error = checkCurrency(currency);
-        if(error != null){
-            return error;
+        if(!account.knowsCurrency(currency)){
+            return "Unknown currency " + currency;
         }
         try {
             parseNumber(parts[2]);
         } catch (NumberFormatException e) {
             return "Invalid deposit amount.";
         }
-        return issue("deposit " + currency + " " + parts[2]);
+        return issue(String.join(" ", parts));
     }
 
-    /*
-    * Creates an addInterest transaction with an optional currency (no currency means all
-    * currencies) and adds it to outstanding_collection.
+    /**
+    * Queues "addInterest [Currency] <percent>" for broadcast. Without a currency it applies to all.
     */
     private String handleAddInterest(String[] parts){
         if(parts.length != 2 && parts.length != 3){
             return "Invalid interest arguments";
         }
 
-        int percentageIndex = (parts.length == 3) ? 2 : 1;
-        if(parts.length == 3){
-            String error = checkCurrency(parts[1]);
-            if(error != null){
-                return error;
-            }
+        if(parts.length == 3 && !account.knowsCurrency(parts[1])){
+            return "Unknown currency " + parts[1];
         }
+        int percentageIndex = (parts.length == 3) ? 2 : 1;
         try {
             parseNumber(parts[percentageIndex]);
         } catch (NumberFormatException e) {
             return "Invalid interest amount";
         }
-        String command = (parts.length == 3)
-                ? "addInterest " + parts[1] + " " + parts[2]
-                : "addInterest " + parts[1];
-        return issue(command);
+        return issue(String.join(" ", parts));
     }
 
-    /*
-    * Adds a deposit or addInterest command to outstanding_collection.
-    */
+    /** Adds the command to outstanding_collection and returns its id. */
     private String issue(String command){
-        try {
-            Transaction transaction = account.issue(command);
-            return "Queued " + transaction.command() + " as transaction " + transaction.uniqueId();
-        } catch (IllegalArgumentException e) {
-            return e.getMessage();
-        }
+        Transaction transaction = account.issue(command);
+        return "Queued \"" + command + "\" as " + transaction.uniqueId();
     }
 
-    /*
-    * Prints the balance of the whole account converted to a currency (USD if none is given),
-    * right away, without waiting for outstanding transactions.
+    /**
+    * Prints the balance right away, without waiting for outstanding transactions.
     */
     private String handleQuickBalance(String[] parts){
-        if(parts.length != 1 && parts.length != 2){
+        if(parts.length > 2){
             return "Invalid balance arguments";
         }
         String currency = (parts.length == 2) ? parts[1] : DEFAULT_CURRENCY;
-        String error = checkCurrency(currency);
-        if(error != null){
-            return error;
+        if(!account.knowsCurrency(currency)){
+            return "Unknown currency " + currency;
         }
         return String.format(Locale.ROOT, "getQuickBalance %s: %.2f", currency, account.balanceIn(currency));
     }
 
-    /*
-    * Prints the executed transactions since the last cleanHistory, numbered from
-    * order_counter - executed_list.size, followed by the outstanding transactions.
-    * getSyncedBalance markers are not transactions on the account, so they are not listed.
+    /**
+    * Prints the executed transactions, numbered from order_counter - executed_list.size,
+    * and then the outstanding ones.
     */
     private String handleGetHistory(String[] parts){
         if(parts.length != 1){
             return "Invalid history argument";
         }
 
-        List<Account.Executed> executed;
-        List<Transaction> outstanding;
-        int orderCounter;
-        // Read all three at once, so a delivery in between cannot make the numbering wrong.
-        synchronized (account) {
-            executed = account.executed();
-            outstanding = account.outstanding();
-            orderCounter = account.orderCounter();
-        }
+        List<Account.Executed> executed = account.executed();
+        int number = account.orderCounter() - executed.size();
 
-        List<String> lines = new ArrayList<>();
-        lines.add("executed_list");
-        int number = orderCounter - executed.size();
-        for (Account.Executed entry : executed) {
-            lines.add(number + ". " + entry.executedAt().format(HISTORY_TIME) + " " + entry.transaction().command());
+        StringBuilder history = new StringBuilder("executed_list");
+        for(Account.Executed entry : executed){
+            history.append("\n").append(number).append(". ")
+                    .append(Log.format(entry.executedAt())).append(" ")
+                    .append(entry.transaction().command());
             number++;
         }
-        lines.add("outstanding_collection");
-        for (Transaction transaction : outstanding) {
-            if (!SyncMarker.isMarker(transaction)) {
-                lines.add(transaction.command());
+
+        history.append("\noutstanding_collection");
+        for(Transaction transaction : account.outstanding()){
+            if(!SyncMarker.isMarker(transaction)){
+                history.append("\n").append(transaction.command());
             }
         }
-        return String.join("\n", lines);
+        return history.toString();
     }
 
-    /*
-    * Shows whether a deposit or addInterest transaction has been applied. Accepts the full id
-    * "<instance name> <counter>", or only the counter for a transaction issued by this server.
+    /**
+    * Shows if a transaction has been applied. "checkTxStatus 3" means our own transaction 3,
+    * "checkTxStatus <name> 3" means transaction 3 of another replica.
     */
     private String handleCheckTxStatus(String[] parts){
         if(parts.length != 2 && parts.length != 3){
@@ -232,16 +187,25 @@ public class CommandProcessor {
 
         String uniqueId = serverName + " " + counter;
         if(account.isApplied(uniqueId)){
-            return "Transaction " + uniqueId + " has been applied.";
+            return "Transaction " + uniqueId + ": applied";
         }
-        if(account.isOutstanding(uniqueId)){
-            return "Transaction " + uniqueId + " has not been applied yet (outstanding).";
+        if(isOutstanding(uniqueId)){
+            return "Transaction " + uniqueId + ": outstanding, not applied yet";
         }
-        return "Transaction " + uniqueId + " is unknown.";
+        return "Transaction " + uniqueId + ": not found";
     }
 
-    /*
-    * Empties executed_list. order_counter and outstanding_counter are kept.
+    private boolean isOutstanding(String uniqueId){
+        for(Transaction transaction : account.outstanding()){
+            if(transaction.uniqueId().equals(uniqueId)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+    * Empties the history. The counters are not reset.
     */
     private String handleCleanHistory(String[] parts){
         if(parts.length != 1){
@@ -251,40 +215,38 @@ public class CommandProcessor {
         return "History cleaned.";
     }
 
-    /*
-    * Prints the names of the replicas currently in the group.
+    /**
+    * Prints the names of the replicas in the group.
     */
     private String handleMemberInfo(String[] parts){
         if(parts.length != 1){
             return "Invalid memberInfo arguments.";
         }
-        List<String> names = members.get();
-        return "memberInfo: " + names.size() + " members " + names;
+        return "Members: " + String.join(", ", replica.members());
     }
 
-    /*
-    * Starts a getSyncedBalance request (USD if no currency is given). It returns at once; the
-    * answer is printed later by the SyncedBalance implementation, when it is ready.
-    * The request line is logged here, before the request is made, because the naive version
-    * answers right away when nothing is outstanding and its answer must come after it.
+    /**
+    * Starts a synced balance request. The balance is printed later, when it is ready.
+    * Returns null because the line is already logged.
     */
     private String handleGetSyncedBalance(String[] parts){
-        if(parts.length != 1 && parts.length != 2){
+        if(parts.length > 2){
             return "Invalid synced balance arguments";
         }
 
         String currency = (parts.length == 2) ? parts[1] : DEFAULT_CURRENCY;
-        String error = checkCurrency(currency);
-        if(error != null){
-            return error;
+        if(!account.knowsCurrency(currency)){
+            return "Unknown currency " + currency;
         }
-        Log.info("getSyncedBalance " + currency + " requested (" + syncedBalance.mode() + ")");
+        // Logged before the request: the naive version answers at once when nothing is
+        // outstanding, and that answer must come after this line.
+        Log.info("getSyncedBalance " + currency + ": waiting for outstanding transactions");
         syncedBalance.request(currency);
-        return "";
+        return null;
     }
 
-    /*
-    * Validates a non-negative sleep duration.
+    /**
+    * Waits for the given number of seconds.
     */
     private String handleSleep(String[] parts){
         if(parts.length != 2){
@@ -315,8 +277,8 @@ public class CommandProcessor {
 
     }
 
-    /*
-    * Validates an exit command. The input loop stops after it and the bank server shuts down.
+    /**
+    * Validates an exit command.
     */
     private String handleExit(String[] parts){
         if(parts.length != 1){

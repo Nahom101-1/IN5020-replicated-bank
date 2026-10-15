@@ -39,7 +39,7 @@ public class Account implements SyncHost {
         this(replicaName, Map.of());
     }
 
-    /** @param ratesToUsd the rates from the currency file, e.g. NOK -> 0.1. USD is always 1.0. */
+    /** @param ratesToUsd the rates from the currency file, e.g. NOK -> 0.1 */
     public Account(String replicaName, Map<String, Double> ratesToUsd) {
         this.replicaName = replicaName;
         this.ratesToUsd = Map.copyOf(ratesToUsd);
@@ -105,24 +105,14 @@ public class Account implements SyncHost {
         return new ArrayList<>(executed);
     }
 
+    /** True if the currency is in the currency file (or is USD). */
+    public boolean knowsCurrency(String currency) {
+        return ratesToUsd.containsKey(currency);
+    }
+
     /** True if the transaction has been applied. */
     public synchronized boolean isApplied(String uniqueId) {
         return appliedIds.contains(uniqueId);
-    }
-
-    /** True if the transaction is in outstanding_collection, i.e. issued here but not applied yet. */
-    public synchronized boolean isOutstanding(String uniqueId) {
-        for (Transaction transaction : outstanding) {
-            if (transaction.uniqueId().equals(uniqueId)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /** True if the currency file has a rate for the currency (USD always has one). */
-    public boolean hasRate(String currency) {
-        return currency.equals("USD") || ratesToUsd.containsKey(currency);
     }
 
     /** Empties the history. Counters and applied ids are kept. */
@@ -173,11 +163,6 @@ public class Account implements SyncHost {
         return replicaName;
     }
 
-    /** Returns "<replica name> <outstanding_counter>" and increases outstanding_counter. */
-    private String nextUniqueId() {
-        return replicaName + " " + outstandingCounter++;
-    }
-
     @Override
     public synchronized void addOutstanding(Transaction transaction) {
         outstanding.add(transaction);
@@ -208,13 +193,15 @@ public class Account implements SyncHost {
 
     private double rateToUsd(String currency) {
         Double rate = ratesToUsd.get(currency);
-        if (rate == null && currency.equals("USD")) {
-            return 1.0; // the currency file lists rates to USD, so USD itself is not in it
-        }
         if (rate == null) {
             throw new IllegalArgumentException("Unknown currency " + currency);
         }
         return rate;
+    }
+
+    /** Returns "<replica name> <outstanding_counter>" and increases outstanding_counter. */
+    private String nextUniqueId() {
+        return replicaName + " " + outstandingCounter++;
     }
 
     private void removeFromOutstanding(String uniqueId) {

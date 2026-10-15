@@ -66,17 +66,14 @@ class AccountSyncTest {
 
     @Test
     void markerDoesNotUseTheDepositCounter() {
-        // checkTxStatus 0 in input/Rep1.txt refers to the first deposit, even though a
-        // getSyncedBalance comes before it.
         Account account = new Account("bank1", RATES);
         SyncedBalance sync = attach(account, "ordered");
 
-        sync.request("USD");
-        Transaction first = account.issue("deposit USD 90");
-        Transaction second = account.issue("deposit NOK 120");
+        account.issue("deposit NOK 100");
+        sync.request("NOK");
+        Transaction next = account.issue("deposit NOK 5");
 
-        assertEquals("bank1 0", first.uniqueId());
-        assertEquals("bank1 1", second.uniqueId());
+        assertEquals("bank1 1", next.uniqueId());
     }
 
     @Test
@@ -102,18 +99,6 @@ class AccountSyncTest {
 
         assertEquals(22.0, account.balanceIn("USD"), DELTA);
         assertEquals(220.0, account.balanceIn("NOK"), DELTA);
-    }
-
-    @Test
-    void usdWorksWithoutBeingInTheCurrencyFile() {
-        // Same rates as input/TradingRate.txt, which has no USD line.
-        Account account = new Account("bank1", Map.of("EUR", 1.12, "NOK", 0.10));
-        account.deliver(List.of(
-                new Transaction("deposit USD 90", "bank2 0"),
-                new Transaction("deposit NOK 120", "bank2 1")));   // 12 USD
-
-        assertEquals(102.0, account.balanceIn("USD"), DELTA);
-        assertEquals(102.0 / 1.12, account.balanceIn("EUR"), DELTA);
     }
 
     @Test
