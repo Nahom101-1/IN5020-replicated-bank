@@ -3,7 +3,7 @@ import java.util.Scanner;
 import com.ass2.bank.util.Log;
 
 /*
-* Handles itneractive command-line input for bank server.
+* Handles interactive command-line input for bank server.
 * Reads commands, processes thyem, and logs the results. 
 */
 public class InteractiveInput {
