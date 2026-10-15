@@ -3,6 +3,7 @@ package com.ass2.bank.core;
 import com.ass2.bank.sync.SyncHost;
 import com.ass2.bank.sync.SyncMarker;
 import com.ass2.bank.sync.SyncedBalance;
+import com.ass2.common.ReplicaState;
 import com.ass2.common.Transaction;
 
 import java.time.LocalDateTime;
@@ -117,6 +118,32 @@ public class Account implements SyncHost {
     /** Number of transactions applied so far. */
     public synchronized int orderCounter() {
         return orderCounter;
+    }
+
+    /** The state a new replica needs to catch up with this one. */
+    public synchronized ReplicaState snapshot() {
+        List<ReplicaState.ExecutedTransaction> history = new ArrayList<>();
+        for (Executed entry : executed) {
+            history.add(new ReplicaState.ExecutedTransaction(entry.transaction(), entry.executedAt()));
+        }
+        return new ReplicaState(balances.snapshot(), history, appliedIds, orderCounter);
+    }
+
+    /**
+     * Copies the state of an existing replica into this one.
+     * Our own outstanding transactions and outstanding_counter are kept.
+     */
+    public synchronized void restore(ReplicaState state) {
+        balances.replaceWith(state.balances());
+
+        executed.clear();
+        for (ReplicaState.ExecutedTransaction entry : state.executed()) {
+            executed.add(new Executed(entry.transaction(), entry.executedAt()));
+        }
+
+        appliedIds.clear();
+        appliedIds.addAll(state.appliedIds());
+        orderCounter = state.orderCounter();
     }
 
     // ---- SyncHost: what getSyncedBalance needs ----
