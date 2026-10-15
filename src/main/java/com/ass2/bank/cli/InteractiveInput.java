@@ -8,11 +8,16 @@ import com.ass2.bank.util.Log;
 */
 public class InteractiveInput {
 
+    private final CommandProcessor processor;
+
+    public InteractiveInput(CommandProcessor processor) {
+        this.processor = processor;
+    }
+
     /*
     * Continously reads the commands untill exit.
     */
     public void run(){
-        CommandProcessor processor = new CommandProcessor();
         Scanner scanner = new Scanner(System.in);
 
         while(true){
@@ -22,6 +27,7 @@ public class InteractiveInput {
             }
 
             String line = scanner.nextLine();
+            Log.info("> " + line.trim());
             String result = processor.process(line);
             Log.info(result);
 
@@ -29,11 +35,5 @@ public class InteractiveInput {
                 break;
             }
         }
-    }
-
-    // For testing purposes. Remove after integration.
-    public static void main(String[] args) {
-        InteractiveInput input = new InteractiveInput();
-        input.run();
     }
 }

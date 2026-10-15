@@ -1,11 +1,34 @@
 package com.ass2.bank.cli;
 
-/*
-* Parses and validates vank commands received from itneractive or batch input. Dispatches each command to its corresponding handler.
+import com.ass2.bank.core.Account;
+import com.ass2.bank.core.BankReplicaImpl;
+import com.ass2.bank.sync.SyncMarker;
+import com.ass2.bank.sync.SyncedBalance;
+import com.ass2.bank.util.Log;
+import com.ass2.common.Transaction;
+
+import java.util.List;
+import java.util.Locale;
+
+/**
+* Parses bank commands from interactive or batch input and runs them on the account.
 */
 public class CommandProcessor {
 
-    /*
+    /** Used by getQuickBalance and getSyncedBalance when no currency is given. */
+    private static final String DEFAULT_CURRENCY = "USD";
+
+    private final Account account;
+    private final SyncedBalance syncedBalance;
+    private final BankReplicaImpl replica;
+
+    public CommandProcessor(Account account, SyncedBalance syncedBalance, BankReplicaImpl replica) {
+        this.account = account;
+        this.syncedBalance = syncedBalance;
+        this.replica = replica;
+    }
+
+    /**
     * Parses an input line and dispatches it to the appropriate command handler.
     *
     * @param line the command entered by the user
@@ -36,8 +59,8 @@ public class CommandProcessor {
 
     }
 
-    /*
-    * Parses a string intoa finite double value.
+    /**
+    * Parses a string into a finite double value.
     *
     * @param value the numeric string to parse
     * @return the parsed double value
@@ -50,10 +73,9 @@ public class CommandProcessor {
         }
         return parsed;
     }
-    
 
-    /*
-    * Validates the currency and deposit amount.
+    /**
+    * Queues "deposit <Currency> <amount>" for broadcast.
     */
     private String handleDeposit(String[] parts){
         if(parts.length != 3){
@@ -61,114 +83,166 @@ public class CommandProcessor {
         }
 
         String currency = parts[1];
+        if(!account.knowsCurrency(currency)){
+            return "Unknown currency " + currency;
+        }
         try {
-            double amount = parseNumber(parts[2]);
-            return currency + ": " + amount;        
+            parseNumber(parts[2]);
         } catch (NumberFormatException e) {
             return "Invalid deposit amount.";
         }
-    
+        return issue(String.join(" ", parts));
     }
 
-    /*
-    * Validates an interest percentage with an optional currency.
+    /**
+    * Queues "addInterest [Currency] <percent>" for broadcast. Without a currency it applies to all.
     */
     private String handleAddInterest(String[] parts){
         if(parts.length != 2 && parts.length != 3){
             return "Invalid interest arguments";
         }
 
-        String currency = (parts.length == 3) ? parts[1] : "ALL";
+        if(parts.length == 3 && !account.knowsCurrency(parts[1])){
+            return "Unknown currency " + parts[1];
+        }
         int percentageIndex = (parts.length == 3) ? 2 : 1;
         try {
-            double percentage = parseNumber(parts[percentageIndex]);
-            return currency + ": " + percentage + "%";
+            parseNumber(parts[percentageIndex]);
         } catch (NumberFormatException e) {
             return "Invalid interest amount";
         }
-        
+        return issue(String.join(" ", parts));
     }
 
-    /*
-    * Validates a quick balance request for a currency.
+    /** Adds the command to outstanding_collection and returns its id. */
+    private String issue(String command){
+        Transaction transaction = account.issue(command);
+        return "Queued \"" + command + "\" as " + transaction.uniqueId();
+    }
+
+    /**
+    * Prints the balance right away, without waiting for outstanding transactions.
     */
     private String handleQuickBalance(String[] parts){
-        if(parts.length != 2){
+        if(parts.length > 2){
             return "Invalid balance arguments";
         }
-        String currency = parts[1];
-        return "Quick balance requested: " + currency;
+        String currency = (parts.length == 2) ? parts[1] : DEFAULT_CURRENCY;
+        if(!account.knowsCurrency(currency)){
+            return "Unknown currency " + currency;
+        }
+        return String.format(Locale.ROOT, "getQuickBalance %s: %.2f", currency, account.balanceIn(currency));
     }
 
-    /*
-    * Validates a transaction history request.
+    /**
+    * Prints the executed transactions, numbered from order_counter - executed_list.size,
+    * and then the outstanding ones.
     */
     private String handleGetHistory(String[] parts){
         if(parts.length != 1){
             return "Invalid history argument";
         }
 
-        return "History requested";
+        List<Account.Executed> executed = account.executed();
+        int number = account.orderCounter() - executed.size();
+
+        StringBuilder history = new StringBuilder("executed_list");
+        for(Account.Executed entry : executed){
+            history.append("\n").append(number).append(". ")
+                    .append(Log.format(entry.executedAt())).append(" ")
+                    .append(entry.transaction().command());
+            number++;
+        }
+
+        history.append("\noutstanding_collection");
+        for(Transaction transaction : account.outstanding()){
+            if(!SyncMarker.isMarker(transaction)){
+                history.append("\n").append(transaction.command());
+            }
+        }
+        return history.toString();
     }
 
-    /*
-    * Validates a transaction identifier.
+    /**
+    * Shows if a transaction has been applied. "checkTxStatus 3" means our own transaction 3,
+    * "checkTxStatus <name> 3" means transaction 3 of another replica.
     */
     private String handleCheckTxStatus(String[] parts){
         if(parts.length != 2 && parts.length != 3){
             return "Invalid transaction ID.";
         }
 
-        String serverName = (parts.length == 3) ? parts[1] : null;
+        String serverName = (parts.length == 3) ? parts[1] : account.instanceName();
         int counterIndex = (parts.length == 3) ? 2 : 1;
         int counter;
-        
+
         try {
             counter = Integer.parseInt(parts[counterIndex]);
         } catch (NumberFormatException e) {
             return "Invalid transaction ID.";
         }
+        if(counter < 0){
+            return "Invalid transaction ID.";
+        }
 
-        String uniqueId = (serverName != null) ? serverName + " " + counter : String.valueOf(counter);
-        return (counter >=0) ? "Checking transaction: " + uniqueId : "Invalid transaction ID.";
+        String uniqueId = serverName + " " + counter;
+        if(account.isApplied(uniqueId)){
+            return "Transaction " + uniqueId + ": applied";
+        }
+        if(isOutstanding(uniqueId)){
+            return "Transaction " + uniqueId + ": outstanding, not applied yet";
+        }
+        return "Transaction " + uniqueId + ": not found";
     }
 
-    /*
-    * Validates a history cleanup request.
+    private boolean isOutstanding(String uniqueId){
+        for(Transaction transaction : account.outstanding()){
+            if(transaction.uniqueId().equals(uniqueId)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+    * Empties the history. The counters are not reset.
     */
     private String handleCleanHistory(String[] parts){
         if(parts.length != 1){
             return "Invalid cleanHistory arguments.";
         }
-        return "History cleanup requested.";
+        account.cleanHistory();
+        return "History cleaned.";
     }
 
-    /*
-    * Validates a group membership information request.
+    /**
+    * Prints the names of the replicas in the group.
     */
     private String handleMemberInfo(String[] parts){
         if(parts.length != 1){
-            return "Invalid memberInfo arguments."; 
+            return "Invalid memberInfo arguments.";
         }
-        return "Member information requested.";
+        return "Members: " + String.join(", ", replica.members());
     }
 
-    /*
-    * Validates a synchronized balance request for a currency.
-    * WIP
+    /**
+    * Starts a synced balance request. The balance is printed later, when it is ready.
     */
     private String handleGetSyncedBalance(String[] parts){
-        if(parts.length != 2){
+        if(parts.length > 2){
             return "Invalid synced balance arguments";
         }
 
-        String currency = parts[1];
-
-        return "Synced balance requested: " + currency;
+        String currency = (parts.length == 2) ? parts[1] : DEFAULT_CURRENCY;
+        if(!account.knowsCurrency(currency)){
+            return "Unknown currency " + currency;
+        }
+        syncedBalance.request(currency);
+        return "getSyncedBalance " + currency + ": waiting for outstanding transactions";
     }
 
-    /*
-    * Validates a non-negative sleep duration.
+    /**
+    * Waits for the given number of seconds.
     */
     private String handleSleep(String[] parts){
         if(parts.length != 2){
@@ -186,8 +260,8 @@ public class CommandProcessor {
            Thread.sleep(milliseconds);
 
            return "Slept for " + seconds + " seconds.";
-        } 
-        
+        }
+
         catch (NumberFormatException e) {
             return "Invalid sleep duration.";
         }
@@ -199,7 +273,7 @@ public class CommandProcessor {
 
     }
 
-    /*
+    /**
     * Validates an exit command.
     */
     private String handleExit(String[] parts){
@@ -209,5 +283,5 @@ public class CommandProcessor {
 
         return "Exit requested.";
     }
-    
+
 }

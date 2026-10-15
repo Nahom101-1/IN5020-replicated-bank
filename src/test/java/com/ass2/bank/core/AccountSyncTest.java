@@ -65,7 +65,7 @@ class AccountSyncTest {
     }
 
     @Test
-    void markerUsesTheSameCounterAsDeposits() {
+    void markerDoesNotUseTheDepositCounter() {
         Account account = new Account("bank1", RATES);
         SyncedBalance sync = attach(account, "ordered");
 
@@ -73,7 +73,7 @@ class AccountSyncTest {
         sync.request("NOK");
         Transaction next = account.issue("deposit NOK 5");
 
-        assertEquals("bank1 2", next.uniqueId());
+        assertEquals("bank1 1", next.uniqueId());
     }
 
     @Test

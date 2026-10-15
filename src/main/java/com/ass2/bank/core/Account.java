@@ -100,6 +100,11 @@ public class Account implements SyncHost {
         return new ArrayList<>(executed);
     }
 
+    /** True if the currency is in the currency file (or is USD). */
+    public boolean knowsCurrency(String currency) {
+        return ratesToUsd.containsKey(currency);
+    }
+
     /** True if the transaction has been applied. */
     public synchronized boolean isApplied(String uniqueId) {
         return appliedIds.contains(uniqueId);
@@ -153,12 +158,6 @@ public class Account implements SyncHost {
         return replicaName;
     }
 
-    /** Returns "<replica name> <outstanding_counter>" and increases outstanding_counter. */
-    @Override
-    public synchronized String nextUniqueId() {
-        return replicaName + " " + outstandingCounter++;
-    }
-
     @Override
     public synchronized void addOutstanding(Transaction transaction) {
         outstanding.add(transaction);
@@ -193,6 +192,11 @@ public class Account implements SyncHost {
             throw new IllegalArgumentException("Unknown currency " + currency);
         }
         return rate;
+    }
+
+    /** Returns "<replica name> <outstanding_counter>" and increases outstanding_counter. */
+    private String nextUniqueId() {
+        return replicaName + " " + outstandingCounter++;
     }
 
     private void removeFromOutstanding(String uniqueId) {

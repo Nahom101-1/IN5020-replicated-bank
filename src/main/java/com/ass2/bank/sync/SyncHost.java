@@ -16,9 +16,6 @@ public interface SyncHost {
     /** The name of this bank server instance, the first part of every uniqueId it creates. */
     String instanceName();
 
-    /** Returns "<instance name> <outstanding_counter>" and increases outstanding_counter by 1. */
-    String nextUniqueId();
-
     /** Appends the transaction to outstanding_collection, so the next broadcast sends it. */
     void addOutstanding(Transaction tx);
 
