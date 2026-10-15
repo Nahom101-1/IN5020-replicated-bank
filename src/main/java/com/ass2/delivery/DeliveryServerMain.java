@@ -1,5 +1,6 @@
 package com.ass2.delivery;
 
+import com.ass2.bank.util.Log;
 import com.ass2.common.Config;
 import com.ass2.common.MessageDelivery;
 
@@ -65,7 +66,7 @@ public class DeliveryServerMain {
                 } catch (Exception ignored) {
                 }
             }));
-            System.out.println("Message Delivery server listening on registry port " + port);
+            Log.info("Message Delivery server listening on registry port " + port);
         } catch (Exception e) {
             implementation.close();
             System.err.println("Could not bind Message Delivery service: " + e.getMessage());

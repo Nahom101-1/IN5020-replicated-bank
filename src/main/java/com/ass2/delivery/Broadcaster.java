@@ -1,5 +1,6 @@
 package com.ass2.delivery;
 
+import com.ass2.bank.util.Log;
 import com.ass2.common.Transaction;
 
 import java.rmi.RemoteException;
@@ -24,9 +25,15 @@ public class Broadcaster {
 		this.calls = calls;
 	}
 
-	/** Delivers one ordered message to every member, retrying only missing ACKs. */
+	/**
+	 * Delivers one ordered message to every member, retrying only missing ACKs.
+	 *
+	 * @param label names the message in the log, e.g. "#4"
+	 * @return the members that did not ACK within 5 s
+	 */
 	public Set<MemberRegistry.Member> deliver(Collection<MemberRegistry.Member> targets,
-												java.util.List<Transaction> transactions)
+												java.util.List<Transaction> transactions,
+												String label)
 			throws RemoteException {
 		Map<String, MemberRegistry.Member> pending = new LinkedHashMap<>();
 		targets.forEach(member -> pending.put(member.name(), member));
@@ -44,6 +51,7 @@ public class Broadcaster {
 		while (!pending.isEmpty()) {
 			long now = System.nanoTime();
 			if (!retried && now >= retryAt) {
+				Log.info("RESEND " + label + " to " + pending.keySet() + " (no ACK after 2 s)");
 				submit(pending.values(), transactions, completions);
 				retried = true;
 			}
