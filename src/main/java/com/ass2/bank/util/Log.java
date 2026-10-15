@@ -11,3 +11,4 @@ public class Log {
         LocalDateTime now = LocalDateTime.now();
         System.out.println("[" + now.format(FORMATTER) + "] " + message);
     }
+}

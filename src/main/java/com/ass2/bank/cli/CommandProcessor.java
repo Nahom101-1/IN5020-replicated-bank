@@ -5,6 +5,9 @@ package com.ass2.bank.cli;
 */
 public class CommandProcessor {
 
+    /* Currency used by getQuickBalance and getSyncedBalance when none is given. */
+    private static final String DEFAULT_CURRENCY = "USD";
+
     /*
     * Parses an input line and dispatches it to the appropriate command handler.
     *
@@ -91,12 +94,13 @@ public class CommandProcessor {
 
     /*
     * Validates a quick balance request for a currency.
+    * Without a currency the balance is given in USD, the base currency of the rate file.
     */
     private String handleQuickBalance(String[] parts){
-        if(parts.length != 2){
+        if(parts.length != 1 && parts.length != 2){
             return "Invalid balance arguments";
         }
-        String currency = parts[1];
+        String currency = (parts.length == 2) ? parts[1] : DEFAULT_CURRENCY;
         return "Quick balance requested: " + currency;
     }
 
@@ -155,14 +159,15 @@ public class CommandProcessor {
 
     /*
     * Validates a synchronized balance request for a currency.
+    * Without a currency the balance is given in USD, the base currency of the rate file.
     * WIP
     */
     private String handleGetSyncedBalance(String[] parts){
-        if(parts.length != 2){
+        if(parts.length != 1 && parts.length != 2){
             return "Invalid synced balance arguments";
         }
 
-        String currency = parts[1];
+        String currency = (parts.length == 2) ? parts[1] : DEFAULT_CURRENCY;
 
         return "Synced balance requested: " + currency;
     }

@@ -37,7 +37,7 @@ public class Account implements SyncHost {
         this(replicaName, Map.of());
     }
 
-    /** @param ratesToUsd the rates from the currency file, e.g. NOK -> 0.1 */
+    /** @param ratesToUsd the rates from the currency file, e.g. NOK -> 0.1. USD is always 1.0. */
     public Account(String replicaName, Map<String, Double> ratesToUsd) {
         this.replicaName = replicaName;
         this.ratesToUsd = Map.copyOf(ratesToUsd);
@@ -162,6 +162,9 @@ public class Account implements SyncHost {
 
     private double rateToUsd(String currency) {
         Double rate = ratesToUsd.get(currency);
+        if (rate == null && currency.equals("USD")) {
+            return 1.0; // the currency file lists rates to USD, so USD itself is not in it
+        }
         if (rate == null) {
             throw new IllegalArgumentException("Unknown currency " + currency);
         }

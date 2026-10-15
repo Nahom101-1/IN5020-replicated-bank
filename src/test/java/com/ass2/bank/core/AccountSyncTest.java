@@ -102,6 +102,18 @@ class AccountSyncTest {
     }
 
     @Test
+    void usdWorksWithoutBeingInTheCurrencyFile() {
+        // Same rates as input/TradingRate.txt, which has no USD line.
+        Account account = new Account("bank1", Map.of("EUR", 1.12, "NOK", 0.10));
+        account.deliver(List.of(
+                new Transaction("deposit USD 90", "bank2 0"),
+                new Transaction("deposit NOK 120", "bank2 1")));   // 12 USD
+
+        assertEquals(102.0, account.balanceIn("USD"), DELTA);
+        assertEquals(102.0 / 1.12, account.balanceIn("EUR"), DELTA);
+    }
+
+    @Test
     void unknownCurrencyIsRejected() {
         Account account = new Account("bank1", RATES);
         assertThrows(IllegalArgumentException.class, () -> account.balanceIn("XYZ"));
